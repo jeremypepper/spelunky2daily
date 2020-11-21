@@ -89,7 +89,11 @@ async function processData() {
       tenDayPercentiles: playerData.tenDayPercentiles,
       scoresByDay: playerData.scoresByDay
     }
-  }).sortBy("tenDayDecayingPercentileScore").reverse().valueOf()
+  })
+      .filter( player => player.scoresByDay.length > 0)
+      .sortBy("tenDayDecayingPercentileScore")
+      .reverse()
+      .valueOf()
 
   return { dataByPlayer, dataByDate, tenDayPercentileScoreList };
 }
@@ -116,8 +120,12 @@ function attachSummaries(dataByPlayer) {
 }
 
 function writeDataSummaries(dataByPlayer, dataByDate, tenDayPercentileScoreList) {
-  fs.writeFileSync("../public/dataByPlayer.json", JSON.stringify(dataByPlayer));
-  fs.writeFileSync("../public/dataByDate.json", JSON.stringify(dataByDate));
+  // fs.writeFileSync("../public/dataByPlayer.json", JSON.stringify(dataByPlayer));
+  // fs.writeFileSync("../public/dataByDate.json", JSON.stringify(dataByDate));
+  const playersInLastTenDays = _.values(tenDayPercentileScoreList).length;
+  const playersEver = _.values(dataByPlayer).length;
+  console.log("players in last 10 days:", playersInLastTenDays)
+  console.log("players ever", playersEver);
   fs.writeFileSync("../public/tenDayPercentileScoreList.json", JSON.stringify(tenDayPercentileScoreList));
 
   fs.writeFileSync("../src/latest-date.json", JSON.stringify({
