@@ -140,7 +140,7 @@ function writeDataSummaries(dataByPlayer, dataByDate, tenDayPercentileScoreList)
     if (!sluggedName) {
       return;
     }
-    const folderName = sluggedName.charAt(0);
+    const folderName = sluggedName.charAt(0).toLowerCase();
     const folderPath = `../public/players/${folderName}`;
     const filePath = `${folderPath}/${sluggedName}.json`;
     console.log(`writing ${filePath}`);
