@@ -151,7 +151,7 @@ function writeDataSummaries(dataByPlayer, dataByDate, tenDayPercentileScoreList)
 
 async function run() {
   await fetchAllDaysData();
-  const { dataByPlayer, dataByDate } = await processData();
+  const { dataByPlayer, dataByDate, tenDayPercentileScoreList } = await processData();
   attachSummaries(dataByPlayer);
   writeDataSummaries(dataByPlayer, dataByDate, tenDayPercentileScoreList);
   // console.log(dataByPlayer["JeremyHay"])
