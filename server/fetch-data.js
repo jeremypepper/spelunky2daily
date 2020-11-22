@@ -1,3 +1,5 @@
+import {getPlayerName} from "../src/utils";
+
 const fs = require("fs");
 const axios = require("axios");
 const { DateTime } = require("luxon");
@@ -133,16 +135,15 @@ function writeDataSummaries(dataByPlayer, dataByDate, tenDayPercentileScoreList)
     dates: _.keys(dataByDate)
   }))
   // write out each player
-  const regexInvalidCharacters = new RegExp("[^A-Za-z0-9\\-_]", "g")
   _.forEach(dataByPlayer, (player) => {
     console.log("player:", player.name)
-    const sluggedName = player.name.replace(regexInvalidCharacters, '__');
-    if (!sluggedName) {
+    const playerName = getPlayerName(player.name)
+    if (!playerName) {
       return;
     }
-    const folderName = sluggedName.charAt(0).toLowerCase();
+    const folderName = playerName.charAt(0).toLowerCase();
     const folderPath = `../public/players/${folderName}`;
-    const filePath = `${folderPath}/${sluggedName}.json`;
+    const filePath = `${folderPath}/${playerName}.json`;
     console.log(`writing ${filePath}`);
     fs.mkdirSync(folderPath, { recursive: true });
 
