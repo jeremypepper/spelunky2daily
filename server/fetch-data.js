@@ -1,4 +1,4 @@
-import {getPlayerName} from "../src/utils";
+const {getPlayerName} = require("../src/utils");
 
 const fs = require("fs");
 const axios = require("axios");
@@ -8,7 +8,6 @@ const DAYS_FOR_DECAYING_SCORE = 10;
 const DECAY_CONST = 0.9;
 const LAST_DAY = DateTime.fromFormat("2020-09-14 +0000", "yyyy-MM-dd ZZZ").toUTC()
 const _ = require("lodash");
-const slugify = require("slugify");
 let latestDate;
 function getDayFilePath(formattedDay) {
   return `../public/dates/${formattedDay}.json`;

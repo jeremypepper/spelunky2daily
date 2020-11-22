@@ -1,17 +1,16 @@
-import {DateTime} from "luxon";
+const {DateTime} = require("luxon");
 
-
-export function parseDate(dateText) {
+function parseDate(dateText) {
   const date = DateTime.fromFormat(dateText, "yyyy-MM-dd").valueOf()
   return date;
 }
 
 const regexInvalidCharacters = new RegExp("[^A-Za-z0-9\\-_]", "g")
-export function getPlayerName(player) {
-  return player.name.replace(regexInvalidCharacters, '__');
+function getPlayerName(playerName) {
+  return playerName.replace(regexInvalidCharacters, '__');
 }
 
-export function getLevelDefinition(levelNumber) {
+function getLevelDefinition(levelNumber) {
   if (levelNumber <= 4) {
     return {
       world: 1,
@@ -66,4 +65,10 @@ export function getLevelDefinition(levelNumber) {
       worldName: "cosmic ocean"
     }
   }
+}
+
+module.exports =  {
+  parseDate,
+  getLevelDefinition,
+  getPlayerName,
 }
