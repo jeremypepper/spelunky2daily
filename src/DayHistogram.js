@@ -59,6 +59,12 @@ export default function Histogram(props) {
     credits: {
       enabled: false
     },
+    legend:{
+      enabled:false,
+    },
+    yAxis: {
+      title: "Number of Players"
+    },
     xAxis: {
       min: 1,
       max: 23,

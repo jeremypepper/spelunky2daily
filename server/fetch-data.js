@@ -14,14 +14,18 @@ function getDayFilePath(formattedDay) {
 }
 
 async function fetchDayDataToFile(date) {
-  const data = await axios({
-    method: "get",
-    url: `http://vdzserver.org/spelunky2/${date}.json`,
-  });
-  const json = data.data;
-  const path = getDayFilePath(date);
-  fs.writeFileSync(path, JSON.stringify(json));
-  console.log(path);
+  try {
+    const data = await axios({
+      method: "get",
+      url: `http://vdzserver.org/spelunky2/${date}.json`,
+    });
+    const json = data.data;
+    const path = getDayFilePath(date);
+    fs.writeFileSync(path, JSON.stringify(json));
+    console.log(path);
+  } catch(e) {
+    console.error("error fetching data for date", date, e);
+  }
 }
 
 async function fetchAllDaysData() {
