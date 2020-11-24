@@ -21,7 +21,7 @@ async function uploadFile(filePath, fileContents) {
       ACL: "public-read"
     }
   })
-  return await upload.promise().then(
+  return upload.promise().then(
       function (data) {
         console.log("Successfully uploaded file", filePath);
       },
