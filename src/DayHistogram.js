@@ -28,6 +28,37 @@ export default function Histogram(props) {
     chart: {
       type: 'column'
     },
+    plotOptions: {
+      column: {
+        colorByPoint: true
+      }
+    },
+    colors: [
+      '#8B786D',
+      '#8B786D',
+      '#8B786D',
+      '#8B786D',
+      '#8B786D',
+      '#590925',
+      '#590925',
+      '#590925',
+      '#590925',
+      '#F6AA1C',
+      '#16425B',
+      '#16425B',
+      '#16425B',
+      '#16425B',
+      '#78A1BB',
+      '#DAD4EF',
+      '#DAD4EF',
+      '#DAD4EF',
+      '#DAD4EF',
+      '#9CDE9F',
+      '#9CDE9F',
+      '#9CDE9F',
+      '#9CDE9F',
+      '#002626',
+    ],
     title: {text:"Maximum World Reached"},
     credits: {
       enabled: false
@@ -55,9 +86,6 @@ export default function Histogram(props) {
       labels: {
         formatter: function() {
           const levelDefinition = getLevelDefinition(this.value);
-          if (this.value === 23) {
-            return "ocean";
-          }
           return `${levelDefinition.toString()}`
         }
       },
@@ -67,7 +95,13 @@ export default function Histogram(props) {
     series: [{
       name: 'WorldEntered',
       data: data,
-    }]
+    }],
+    tooltip: {
+      formatter: function() {
+        const levelDefinition = getLevelDefinition(this.x);
+        return `${levelDefinition.worldName} ${levelDefinition.toString()}<br/>${this.y} players`
+      }
+    }
   }
 
   const Chart = () => <div>
