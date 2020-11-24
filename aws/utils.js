@@ -22,9 +22,6 @@ class LevelDefintion {
   }
 
   toString() {
-    if (this.value === 23) {
-      return "ocean";
-    }
     return `${this.world}-${this.sublevel}`
   }
 }

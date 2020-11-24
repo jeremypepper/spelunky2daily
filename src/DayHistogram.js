@@ -72,20 +72,13 @@ export default function Histogram(props) {
     xAxis: {
       min: 1,
       max: 23,
-      // categories: [
-      //   'Dwelling',
-      //   'Volcana/Jungle',
-      //   'Olmec',
-      //   'Tide Pool/Temple',
-      //   'Ice Caves',
-      //   'Neo Babylon',
-      //   'Sunken City',
-      //   'Cosmic Ocean',
-      // ],
       tickPositions: [1, 5, 9, 10, 14, 15, 19, 23],
       labels: {
         formatter: function() {
           const levelDefinition = getLevelDefinition(this.value);
+          if (levelDefinition.value === 23) {
+            return "ocean";
+          }
           return `${levelDefinition.toString()}`
         }
       },
