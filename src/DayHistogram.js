@@ -24,7 +24,6 @@ export default function Histogram(props) {
   for (let i = 1; i <= maxLevel; i++) {
     data[i] = worldNumbers[i] || 0;
   }
-  //const data = _.map(worldNumbers, count => count);
   const options = {
     chart: {
       type: 'column'
@@ -37,7 +36,7 @@ export default function Histogram(props) {
       enabled:false,
     },
     yAxis: {
-      title: "Number of Players"
+      title: { text: "Number of Players" }
     },
     xAxis: {
       min: 1,
@@ -52,13 +51,14 @@ export default function Histogram(props) {
       //   'Sunken City',
       //   'Cosmic Ocean',
       // ],
+      tickPositions: [1, 5, 9, 10, 14, 15, 19, 23],
       labels: {
         formatter: function() {
           const levelDefinition = getLevelDefinition(this.value);
           if (this.value === 23) {
             return "ocean";
           }
-          return `${levelDefinition.world}-${levelDefinition.sublevel}`
+          return `${levelDefinition.toString()}`
         }
       },
 

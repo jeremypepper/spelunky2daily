@@ -11,7 +11,7 @@ import TableRow from "@material-ui/core/TableRow";
 import makeStyles from "@material-ui/core/styles/makeStyles";
 import {TableBody} from "@material-ui/core";
 
-import {parseDate} from "./utils";
+import {getLevelDefinition, parseDate} from "./utils";
 import Histogram from "./DayHistogram";
 import {fetchPath} from "./api";
 
@@ -31,10 +31,11 @@ function DayTable(props) {
   }
 
   const tableRows = _.map(props.dayData, player => {
+    const levelData = getLevelDefinition(player.level)
     return <TableRow key={player.id}>
         <TableCell><a href={`?player=${player.name}`}>{player.name}</a></TableCell>
       <TableCell>{player.platform === 18 ? "Steam" : "Playstation"}</TableCell>
-      <TableCell>{player.level}</TableCell>
+      <TableCell>{levelData.toString()}</TableCell>
       <TableCell>{player.percentile.toFixed(2)}</TableCell>
     </TableRow>;
   })
