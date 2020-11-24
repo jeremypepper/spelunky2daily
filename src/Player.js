@@ -9,7 +9,9 @@ import {TableBody} from "@material-ui/core";
 import _ from 'lodash';
 import Highcharts from 'highcharts';
 import HighchartsReact from 'highcharts-react-official'
-import {parseDate} from "./utils";
+import {parseDate, getPlayerName} from "./utils";
+import {fetchPath} from "./api";
+
 
 const PUBLIC_URL = process.env.PUBLIC_URL;
 function Player(props) {
@@ -17,9 +19,9 @@ function Player(props) {
   const player = props.player;
 
   useEffect(() => {
-    const playerSlug = slugify(player);
-    const playerFolder = playerSlug.charAt(0);
-    fetch(PUBLIC_URL + `/players/${playerFolder}/${playerSlug}.json`)
+    const playerSlug = getPlayerName(player);
+    const playerFolder = playerSlug.charAt(0).toLowerCase();
+    fetchPath( `/players/${playerFolder}/${playerSlug}.json`)
       .then((response) => response.json())
       .then((data) => {
         setPlayerData(data);
