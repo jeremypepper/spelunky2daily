@@ -31,6 +31,9 @@ export default function Histogram(props) {
     plotOptions: {
       column: {
         colorByPoint: true
+      },
+      series: {
+        minPointLength: 3
       }
     },
     colors: [
