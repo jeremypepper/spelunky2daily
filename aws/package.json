@@ -1,0 +1,19 @@
+{
+  "dependencies": {
+    "aws-sdk": "^2.797.0",
+    "axios": "^0.21.0",
+    "lodash": "^4.17.20",
+    "luxon": "^1.25.0",
+    "uuid": "^8.3.1"
+  },
+  "name": "aws-fetch-upload-s3",
+  "description": "Fetch and upload to s3",
+  "version": "1.0.1",
+  "main": "index.js",
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Jeremy Hay",
+  "license": "MIT"
+}

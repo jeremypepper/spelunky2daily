@@ -27,7 +27,8 @@
     "test": "react-scripts test",
     "eject": "react-scripts eject",
     "predeploy": "npm run build",
-    "deploy": "gh-pages -d build"
+    "deploy": "gh-pages -d build",
+    "proxy": "lcp --proxyUrl https://spelunky2daily.s3-us-west-2.amazonaws.com"
   },
   "eslintConfig": {
     "extends": [
@@ -48,6 +49,7 @@
     ]
   },
   "devDependencies": {
+    "local-cors-proxy": "^1.1.0",
     "prettier": "2.1.2"
   }
 }

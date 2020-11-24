@@ -9,33 +9,7 @@ function getLevelButGroupOcean(playerDayData) {
   const level = getLevel(playerDayData);
   return level > 23 ? 23 : level;
 }
-const getWorldNumber = (playerDayData) => {
-    if (playerDayData.level <= 4) {
-      // dwelling
-      return 1;
-    } else if (playerDayData.level <= 8) {
-      // volcana/jungle
-      return 2;
-    } else if (playerDayData.level === 9) {
-      // olmec
-      return 3;
-    } else if (playerDayData.level <= 13) {
-      // tide pool / temple
-      return 4;
-    } else if (playerDayData.level <= 14) {
-      // ice caves
-      return 5;
-    } else if (playerDayData.level <= 18) {
-      // disco babylon
-      return 6;
-    } else if (playerDayData.level <= 22) {
-      // sunken city
-      return 7;
-    } else {
-      // cosmic ocean
-      return 8;
-    }
-}
+
 function getWorldNumberBuckets(dayData) {
   return _.countBy(dayData, getLevelButGroupOcean);
 }

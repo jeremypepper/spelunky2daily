@@ -1,10 +1,8 @@
-const {uploadFile} = require("../aws/s3-utils");
-const {getPlayerName} = require("../aws/utils");
+const {uploadFile, readJsonFile, doesPathExist} = require("./s3-utils");
+const {getPlayerName} = require("./utils");
 
-const fs = require("fs");
 const axios = require("axios");
 const { DateTime } = require("luxon");
-const DAYS_TO_FETCH = 30;
 const DAYS_FOR_DECAYING_SCORE = 10;
 const DECAY_CONST = 0.9;
 const LAST_DAY = DateTime.fromFormat("2020-09-14 +0000", "yyyy-MM-dd ZZZ").toUTC()
@@ -12,14 +10,10 @@ const _ = require("lodash");
 let latestDate;
 
 function getDayFilePath(formattedDay) {
-  return `../public/dates/${formattedDay}.json`;
-}
-
-function getDayS3Path(formattedDay) {
   return `dates/${formattedDay}.json`;
 }
 
-async function fetchDayDataToFile(date) {
+async function fetchDayDataToS3(date) {
   try {
     const data = await axios({
       method: "get",
@@ -27,8 +21,9 @@ async function fetchDayDataToFile(date) {
     });
     const json = data.data;
     const path = getDayFilePath(date);
-    fs.writeFileSync(path, JSON.stringify(json));
     console.log(path);
+    await uploadFile(path, JSON.stringify(json))
+    // fs.writeFileSync(path, JSON.stringify(json));
   } catch(e) {
     console.error("error fetching data for date", date, e);
   }
@@ -38,9 +33,12 @@ async function fetchAllDaysData() {
   let date = DateTime.local().toUTC().startOf('day').plus({ days: -1 });
   latestDate = date.toFormat("yyyy-MM-dd");
   while(date >= LAST_DAY) {
-    let formattedDay = date.toFormat("yyyy-MM-dd");
-    if (!fs.existsSync(getDayFilePath(formattedDay))) {
-      await fetchDayDataToFile(formattedDay);
+    const formattedDay = date.toFormat("yyyy-MM-dd");
+    const path = getDayFilePath(formattedDay);
+    if (!await doesPathExist(path)) {
+      await fetchDayDataToS3(formattedDay);
+    } else {
+      console.log(`path exists for ${path}, skipping fetch`)
     }
     date = date.plus({ days: -1 });
   }
@@ -52,8 +50,8 @@ async function processData() {
   let date = DateTime.local().toUTC().startOf('day').plus({ days: -1 });
   while(date >= LAST_DAY) {
     let formattedDay = date.toFormat("yyyy-MM-dd");
-    const path = getDayFilePath(formattedDay);
-    const json = JSON.parse(fs.readFileSync(path));
+    const path = `dates/${formattedDay}.json`
+    const json = await readJsonFile(path);
     dataByDate[formattedDay] = json;
     _.forEach(json, (player, rank) => {
       const name = player.name;
@@ -130,49 +128,49 @@ function attachSummaries(dataByPlayer) {
   });
 }
 
-function writeDataSummaries(dataByPlayer, dataByDate, tenDayPercentileScoreList) {
-  // fs.writeFileSync("../public/dataByPlayer.json", JSON.stringify(dataByPlayer));
-  // fs.writeFileSync("../public/dataByDate.json", JSON.stringify(dataByDate));
+async function writeDataSummaries(dataByPlayer, dataByDate, tenDayPercentileScoreList) {
   const playersInLastTenDays = _.values(tenDayPercentileScoreList).length;
   const playersEver = _.values(dataByPlayer).length;
   console.log("players in last 10 days:", playersInLastTenDays)
   console.log("players ever", playersEver);
-  fs.writeFileSync("../public/tenDayPercentileScoreList.json", JSON.stringify(tenDayPercentileScoreList));
-
-  fs.writeFileSync("../src/latest-date.json", JSON.stringify({
+  await uploadFile('tenDayPercentileScoreList.json',
+      JSON.stringify(tenDayPercentileScoreList));
+  await uploadFile('latest-date.json',  JSON.stringify({
     date: latestDate,
     dates: _.keys(dataByDate)
   }))
-  // write out each player
-  _.forEach(dataByPlayer, (player) => {
-    console.log("player:", player.name)
-    const playerName = getPlayerName(player.name)
+  // write out each player that has played in the last 10 days
+
+  const players = playersInLastTenDays;
+  for (let i = 0; i < players.length; i++) {
+    const playerName = players[i];
+    const player = dataByPlayer[playerName];
     if (!playerName) {
       return;
     }
     const folderName = playerName.charAt(0).toLowerCase();
-    const folderPath = `../public/players/${folderName}`;
+    const folderPath = `players/${folderName}`;
     const filePath = `${folderPath}/${playerName}.json`;
     console.log(`writing ${filePath}`);
-    fs.mkdirSync(folderPath, { recursive: true });
+    await uploadFile(filePath, JSON.stringify(player));
+  }
 
-    fs.writeFileSync(filePath, JSON.stringify(player));
-  });
-
-  _.forEach(dataByDate, (data, date) => {
-    fs.writeFileSync(
-      `../public/processeddates/${date}.json`,
-      JSON.stringify(data)
-    );
-    console.log("uploading", getDayS3Path(date));
-    uploadFile(`processeddates/${date}.json`, JSON.stringify(data));
-  });
+  const dates = _.keys(dataByDate);
+  for (let i = 0; i < players.length; i++) {
+    const date = dates[i];
+    const data = dataByDate[date];
+    await uploadFile(`processeddates/${date}.json`, JSON.stringify(data));
+  }
 }
 
 async function run() {
+  console.log("fetching all days")
   await fetchAllDaysData();
+  console.log("processing all days")
   const { dataByPlayer, dataByDate, tenDayPercentileScoreList } = await processData();
   attachSummaries(dataByPlayer);
-  writeDataSummaries(dataByPlayer, dataByDate, tenDayPercentileScoreList);
+  await writeDataSummaries(dataByPlayer, dataByDate, tenDayPercentileScoreList);
 }
-run();
+
+
+module.exports = {run};

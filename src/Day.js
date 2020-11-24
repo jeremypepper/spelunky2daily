@@ -10,36 +10,14 @@ import TableHead from "@material-ui/core/TableHead";
 import TableRow from "@material-ui/core/TableRow";
 import makeStyles from "@material-ui/core/styles/makeStyles";
 import {TableBody} from "@material-ui/core";
-import latestDate from './latest-date'
+
 import {parseDate} from "./utils";
-import HighchartsReact from "highcharts-react-official";
-import Highcharts from "highcharts";
 import Histogram from "./DayHistogram";
-const PUBLIC_URL = process.env.PUBLIC_URL;
+import {fetchPath} from "./api";
 
 function formatDay(date) {
   return date.toUTC().toFormat("yyyy-MM-dd");
 }
-
-function doesDayHaveData(formattedDay) {
-  return _.includes(latestDate.dates, formattedDay);
-}
-
-function getFormattedDayDelta(formattedDay, delta) {
-  const nextDate = DateTime.fromMillis(parseDate(formattedDay)).plus({days: delta});
-  const nextDay = formatDay(nextDate)
-  return doesDayHaveData(nextDay) ? nextDay : null;
-}
-
-function getFormattedPreviousDay(formattedDay) {
-  return getFormattedDayDelta(formattedDay, -1);
-}
-
-function getFormattedNextDay(formattedDay) {
-  return getFormattedDayDelta(formattedDay, 1);
-}
-
-
 
 function DayTable(props) {
   const useStyles = makeStyles({
@@ -83,11 +61,30 @@ function DayTable(props) {
 }
 
 function Day(props) {
+
+  const latestDate = window.lastDayJSON;
+  function doesDayHaveData(formattedDay) {
+    return _.includes(latestDate.dates, formattedDay);
+  }
+  function getFormattedDayDelta(formattedDay, delta) {
+    const nextDate = DateTime.fromMillis(parseDate(formattedDay)).plus({days: delta});
+    const nextDay = formatDay(nextDate)
+    return doesDayHaveData(nextDay) ? nextDay : null;
+  }
+
+  function getFormattedPreviousDay(formattedDay) {
+    return getFormattedDayDelta(formattedDay, -1);
+  }
+
+  function getFormattedNextDay(formattedDay) {
+    return getFormattedDayDelta(formattedDay, 1);
+  }
+
   const [dayData, setDayData] = useState(null);
   const formattedDay = props.day;
 
   useEffect(() => {
-    fetch(PUBLIC_URL + "/processeddates/" + formattedDay + ".json")
+    fetchPath( "/processeddates/" + formattedDay + ".json")
       .then((response) => response.json())
       .then((data) => {
         setDayData(data);
