@@ -29,8 +29,9 @@ function DayTable(props) {
   if (!props.dayData) {
     return null;
   }
+  const data = props.filterCount ? _.take(props.dayData, props.filterCount) : props.dayData;
 
-  const tableRows = _.map(props.dayData, player => {
+  const tableRows = _.map(data, player => {
     const levelData = getLevelDefinition(player.level)
     return <TableRow key={player.id}>
         <TableCell><a href={`?player=${player.name}`}>{player.name}</a></TableCell>
@@ -62,7 +63,7 @@ function DayTable(props) {
 }
 
 function Day(props) {
-
+  const [filterCount, setFilterCount] = useState(100);
   const latestDate = window.lastDayJSON;
   function doesDayHaveData(formattedDay) {
     return _.includes(latestDate.dates, formattedDay);
@@ -79,6 +80,10 @@ function Day(props) {
 
   function getFormattedNextDay(formattedDay) {
     return getFormattedDayDelta(formattedDay, 1);
+  }
+
+  function showAll() {
+    setFilterCount(null);
   }
 
   const [dayData, setDayData] = useState(null);
@@ -114,7 +119,12 @@ function Day(props) {
       <div className="histogram-wrapper">
         <Histogram dayData={dayData} />
       </div>
-      <DayTable dayData={dayData} />
+      <DayTable dayData={dayData} filterCount={filterCount}/>
+      {
+        filterCount
+          ? <div>Showing Top 100 players <button onClick={showAll}>Show All</button></div>
+          : null
+      }
     </div>
   );
 }
