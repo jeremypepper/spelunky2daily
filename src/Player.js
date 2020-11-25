@@ -1,6 +1,5 @@
 import "./Player.css";
 import React, { useEffect, useState } from "react";
-import slugify from "slugify";
 import Table from "@material-ui/core/Table";
 import TableHead from "@material-ui/core/TableHead";
 import TableRow from "@material-ui/core/TableRow";
@@ -12,8 +11,6 @@ import HighchartsReact from 'highcharts-react-official'
 import {parseDate, getPlayerName} from "./utils";
 import {fetchPath} from "./api";
 
-
-const PUBLIC_URL = process.env.PUBLIC_URL;
 function Player(props) {
   const [playerData, setPlayerData] = useState(null);
   const player = props.player;
