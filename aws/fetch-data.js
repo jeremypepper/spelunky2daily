@@ -158,23 +158,20 @@ async function writeDataSummaries(dataByPlayer, dataByDate, tenDayPercentileScor
       JSON.stringify(tenDayPercentileScoreList));
   await uploadFile('percentilesByDate.json',
       JSON.stringify(percentilesByDate));
-  await uploadFile('latest-date.json',  JSON.stringify({
-    date: latestDate,
-    dates: _.keys(dataByDate)
-  }))
 
   // write out each player that has played in the last 10 days
   const players = playersInLast7Days;
   const playerPromises = []
   for (let i = 0; i < players.length; i++) {
-    const playerName = getPlayerName(players[i].playerName);
+    const playerName = players[i].playerName;
     const player = dataByPlayer[playerName];
     if (!playerName) {
       return;
     }
-    const folderName = playerName.charAt(0).toLowerCase();
+    const safePlayerName = getPlayerName(playerName);
+    const folderName = safePlayerName.charAt(0).toLowerCase();
     const folderPath = `players/${folderName}`;
-    const filePath = `${folderPath}/${playerName}.json`;
+    const filePath = `${folderPath}/${safePlayerName}.json`;
     console.log(`writing ${i}/${players.length} ${filePath}`);
     playerPromises.push(uploadFile(filePath, JSON.stringify(player)));
   }
@@ -188,6 +185,11 @@ async function writeDataSummaries(dataByPlayer, dataByDate, tenDayPercentileScor
     const data = dataByDate[date];
     await uploadFile(`processeddates/${date}.json`, JSON.stringify(data));
   }
+
+  await uploadFile('latest-date.json',  JSON.stringify({
+    date: latestDate,
+    dates: _.keys(dataByDate)
+  }))
 }
 
 async function run() {

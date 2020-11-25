@@ -12,15 +12,20 @@ const bucketName = 'spelunky2daily';
 
 async function uploadFile(filePath, fileContents) {
 // Use S3 ManagedUpload class as it supports multipart uploads
-  var upload = new AWS.S3.ManagedUpload({
-    params: {
-      Bucket: bucketName,
-      Key: filePath,
-      ContentType: 'application/json',
-      Body: Buffer.from(fileContents),
-      ACL: "public-read"
-    }
-  })
+  try {
+    var upload = new AWS.S3.ManagedUpload({
+      params: {
+        Bucket: bucketName,
+        Key: filePath,
+        ContentType: 'application/json',
+        Body: Buffer.from(fileContents),
+        ACL: "public-read"
+      }
+    })
+  } catch(err) {
+    console.error(`error in ${filePath}`, err)
+    return;
+  }
   return upload.promise().then(
       function (data) {
         console.log("Successfully uploaded file", filePath);
