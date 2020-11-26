@@ -6,8 +6,10 @@ const { DateTime } = require("luxon");
 const DAYS_FOR_DECAYING_SCORE = 10;
 const DECAY_CONST = 0.9;
 const LAST_DAY = DateTime.fromFormat("2020-09-14 +0000", "yyyy-MM-dd ZZZ").toUTC()
-// const LAST_DAY = DateTime.fromFormat("2020-11-14 +0000", "yyyy-MM-dd ZZZ").toUTC()
+// const LAST_DAY = DateTime.fromFormat("2020-11-20 +0000", "yyyy-MM-dd ZZZ").toUTC()
 const _ = require("lodash");
+const {getPlayers} = require("./dynamodbtest");
+const {putPlayers} = require("./dynamodbtest");
 let latestDate;
 const LOOKBACK_DAYS = -1;
 function getDayFilePath(formattedDay) {
@@ -30,10 +32,10 @@ async function fetchDayDataToS3(date) {
   }
 }
 
-async function fetchAllDaysData() {
+async function fetchAllDaysData(refetchFromDate) {
   let date = DateTime.local().toUTC().startOf('day').plus({ days: LOOKBACK_DAYS });
   latestDate = date.toFormat("yyyy-MM-dd");
-  while(date >= LAST_DAY) {
+  while(date >= refetchFromDate) {
     const formattedDay = date.toFormat("yyyy-MM-dd");
     const path = getDayFilePath(formattedDay);
     if (!await doesPathExist(path)) {
@@ -41,7 +43,7 @@ async function fetchAllDaysData() {
     } else {
       console.log(`path exists for ${path}, skipping fetch`)
     }
-    date = date.plus({ days: LOOKBACK_DAYS });
+    date = date.plus({ days: -1 });
   }
 }
 
@@ -51,12 +53,13 @@ function getLevelAtPercentile(dayJSON, percentile) {
   return dayJSON[index].level;
 }
 
-async function processData() {
-  const dataByPlayer = {};
+async function processData(refetchFromDate) {
+  let dataByPlayer = {}
   const dataByDate = {};
   const percentilesByDate = {};
   let date = DateTime.local().toUTC().startOf('day').plus({ days: LOOKBACK_DAYS });
-  while(date >= LAST_DAY) {
+
+  while(date >= refetchFromDate) {
     let formattedDay = date.toFormat("yyyy-MM-dd");
     const path = `dates/${formattedDay}.json`
     const json = await readJsonFile(path);
@@ -89,15 +92,20 @@ async function processData() {
       p99: getLevelAtPercentile(json,0.99),
     }
     percentilesByDate[date] = percentiles;
-    date = date.plus({ days: LOOKBACK_DAYS });
+    date = date.plus({ days: -1 });
   }
 
+  return { dataByPlayer, dataByDate, percentilesByDate };
+}
+
+//todo add this back
+function calculatePercentiles(dataByPlayer) {
   // calculate last 10 days
   _.forEach(dataByPlayer, (playerData, playerName) => {
     const scores = [];
     const percentiles = [];
-    for (let i = DAYS_FOR_DECAYING_SCORE; i > 0; i--) {
-      date = DateTime.local().toUTC().startOf('day').plus({ days: LOOKBACK_DAYS - i });
+    for (let i = 0; i < DAYS_FOR_DECAYING_SCORE; i++) {
+      let date = DateTime.local().toUTC().startOf('day').plus({ days: -1 - i });
       const dataForDay = playerData.scoreData[date.toFormat("yyyy-MM-dd")];
       if (dataForDay) {
         // calculate a decaying percentile score (more days ago means more decay)
@@ -124,9 +132,9 @@ async function processData() {
       .sortBy("tenDayDecayingPercentileScore")
       .reverse()
       .valueOf()
-
-  return { dataByPlayer, dataByDate, tenDayPercentileScoreList, percentilesByDate };
+  return {tenDayPercentileScoreList};
 }
+
 
 function attachSummaries(dataByPlayer) {
   _.forEach(dataByPlayer, (player) => {
@@ -160,21 +168,26 @@ async function writeDataSummaries(dataByPlayer, dataByDate, tenDayPercentileScor
       JSON.stringify(percentilesByDate));
 
   // write out each player that has played in the last 10 days
-  const players = playersInLast7Days;
+  const playerNamesToWrite = _.map(playersInLast7Days, player => dataByPlayer[player["playerName"]]);
+
+  // write out all players
+  // const playerNamesToWrite = _.map(playersEver, player => dataByPlayer[player["playerName"]]);
+
   const playerPromises = []
-  for (let i = 0; i < players.length; i++) {
-    const playerName = players[i].playerName;
-    const player = dataByPlayer[playerName];
-    if (!playerName) {
-      return;
-    }
-    const safePlayerName = getPlayerName(playerName);
-    const folderName = safePlayerName.charAt(0).toLowerCase();
-    const folderPath = `players/${folderName}`;
-    const filePath = `${folderPath}/${safePlayerName}.json`;
-    console.log(`writing ${i}/${players.length} ${filePath}`);
-    playerPromises.push(uploadFile(filePath, JSON.stringify(player)));
-  }
+  // for (let i = 0; i < players.length; i++) {
+  //   const playerName = players[i].playerName;
+  //   const player = dataByPlayer[playerName];
+  //   if (!playerName) {
+  //     return;
+  //   }
+  //   const safePlayerName = getPlayerName(playerName);
+  //   const folderName = safePlayerName.charAt(0).toLowerCase();
+  //   const folderPath = `players/${folderName}`;
+  //   const filePath = `${folderPath}/${safePlayerName}.json`;
+  //   console.log(`writing ${i}/${players.length} ${filePath}`);
+  //   playerPromises.push(uploadFile(filePath, JSON.stringify(player)));
+  // }
+  await putPlayers(playerNamesToWrite);
   console.log("waiting for all players to upload")
   await Promise.all(playerPromises);
 
@@ -192,13 +205,49 @@ async function writeDataSummaries(dataByPlayer, dataByDate, tenDayPercentileScor
   }))
 }
 
-async function run() {
-  console.log("fetching all days")
-  await fetchAllDaysData();
-  console.log("processing all days")
-  const { dataByPlayer, dataByDate, tenDayPercentileScoreList, percentilesByDate } = await processData();
+function mergeHistoricalPlayerData(dataByPlayer, playersFromDB) {
+  _.each(playersFromDB, playerFromDB => {
+    const latestData = dataByPlayer[playerFromDB.playerName];
+    if (latestData) {
+      _.merge(latestData.scoreData, playerFromDB.scoreData);
+    }
+  })
+}
+
+async function runWithParams(params) {
+  const shouldFetchAllData = params.fetchAllDaysData === true;
+  let refetchFromDate = params.refetchFromDate;
+  if (!refetchFromDate) {
+    if (shouldFetchAllData) {
+      refetchFromDate = LAST_DAY;
+    } else {
+      refetchFromDate = DateTime.local().toUTC().startOf('day').plus({ days: -1 });
+    }
+  }
+
+  await fetchAllDaysData(refetchFromDate)
+  const { dataByDate, dataByPlayer, percentilesByDate } = await processData(refetchFromDate)
+// need to fetch all player data
+  if (refetchFromDate !== LAST_DAY) {
+    const playersFromDB = await getPlayers(_.keys(dataByPlayer));
+    // need to merge all players
+    mergeHistoricalPlayerData(dataByPlayer, playersFromDB)
+  }
   attachSummaries(dataByPlayer);
+  const {tenDayPercentileScoreList} = calculatePercentiles(dataByPlayer)
   await writeDataSummaries(dataByPlayer, dataByDate, tenDayPercentileScoreList, percentilesByDate);
+}
+
+async function run() {
+  // console.log("fetching all days")
+  // await fetchAllDaysData();
+  // console.log("processing all days")
+  // const { dataByPlayer, dataByDate, tenDayPercentileScoreList, percentilesByDate } = await processData();
+  // attachSummaries(dataByPlayer);
+  // await writeDataSummaries(dataByPlayer, dataByDate, tenDayPercentileScoreList, percentilesByDate);
+  let date = DateTime.local().toUTC().startOf('day').plus({ days: LOOKBACK_DAYS })
+  await runWithParams({fetchAllDaysData: false, refetchFromDate: date})
+  // await runWithParams({fetchAllDaysData: true})
 }
 
 

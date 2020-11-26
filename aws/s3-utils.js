@@ -63,4 +63,18 @@ async function doesPathExist(filePath) {
   }
 }
 
-module.exports = { uploadFile, readJsonFile, doesPathExist}
+async function listFiles() {
+  const params = {
+    Bucket: bucketName,
+    Delimiter: '/',
+    Prefix: 'players/'
+  }
+  try {
+  return s3.listObjects(params).promise();
+  } catch(err) {
+    console.log(params, err)
+    return false;
+  }
+}
+
+module.exports = { uploadFile, readJsonFile, doesPathExist, listFiles}

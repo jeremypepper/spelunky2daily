@@ -9,17 +9,17 @@ import _ from 'lodash';
 import Highcharts from 'highcharts';
 import HighchartsReact from 'highcharts-react-official'
 import {parseDate, getPlayerName} from "./utils";
-import {fetchPath} from "./api";
+import {fetchPath, fetchPlayer} from "./api";
 
 function Player(props) {
   const [playerData, setPlayerData] = useState(null);
   const player = props.player;
 
   useEffect(() => {
-    const playerSlug = getPlayerName(player);
-    const playerFolder = playerSlug.charAt(0).toLowerCase();
-    fetchPath( `/players/${playerFolder}/${playerSlug}.json`)
-      .then((response) => response.json())
+    // const playerSlug = getPlayerName(player);
+    // const playerFolder = playerSlug.charAt(0).toLowerCase();
+    fetchPlayer(player)
+    // fetchPath( `/players/${playerFolder}/${playerSlug}.json`)
       .then((data) => {
         setPlayerData(data);
       });
