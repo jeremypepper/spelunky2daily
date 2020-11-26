@@ -192,16 +192,22 @@ async function writeDataSummaries(dataByPlayer, dataByDate, tenDayPercentileScor
   await Promise.all(playerPromises);
 
   console.log("uploading processed data by date")
-  const dates = _.keys(dataByDate);
+
+  let dates = _.keys(dataByDate);
   for (let i = 0; i < dates.length; i++) {
     const date = dates[i];
     const data = dataByDate[date];
     await uploadFile(`processeddates/${date}.json`, JSON.stringify(data));
   }
 
+  if (dates.length <= 3) {
+    // fetch
+    const lastestDateJsons3 = readJsonFile('latest-date.json')
+    dates = lastestDateJsons3.date;
+  }
   await uploadFile('latest-date.json',  JSON.stringify({
     date: latestDate,
-    dates: _.keys(dataByDate)
+    dates
   }))
 }
 
