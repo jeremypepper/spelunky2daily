@@ -202,8 +202,11 @@ async function writeDataSummaries(dataByPlayer, dataByDate, tenDayPercentileScor
 
   if (dates.length <= 3) {
     // fetch
-    const lastestDateJsons3 = readJsonFile('latest-date.json')
-    dates = lastestDateJsons3.date;
+    const lastestDateJsons3 = await readJsonFile('latest-date.json')
+    dates = lastestDateJsons3.dates;
+    if (!_.includes(dates, latestDate)) {
+      dates.push(latestDate);
+    }
   }
   await uploadFile('latest-date.json',  JSON.stringify({
     date: latestDate,
