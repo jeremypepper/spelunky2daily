@@ -8,7 +8,7 @@ import {TableBody} from "@material-ui/core";
 import _ from 'lodash';
 import Highcharts from 'highcharts';
 import HighchartsReact from 'highcharts-react-official'
-import {parseDate, getPlayerName} from "./utils";
+import {parseDate, getPlayerName, getLevelDefinition} from "./utils";
 import {fetchPath, fetchPlayer} from "./api";
 
 function Player(props) {
@@ -74,7 +74,12 @@ function Player(props) {
     },
     tooltip: {
       headerFormat: '<b>{series.name}</b><br>',
-      pointFormat: '{point.x:%m-%d}: {point.y}'
+      pointFormat: '{point.x:%m-%d}: {point.y}',
+      formatter: function() {
+        const levelDefinition = getLevelDefinition(this.y);
+        const date = Highcharts.dateFormat('%m-%d-%Y', new Date(this.x))
+        return `${date} <br/>${levelDefinition.worldName} ${levelDefinition.toString()}<br/>`
+      }
     },
     xAxis: {
       type: 'datetime',
@@ -86,7 +91,20 @@ function Player(props) {
       title: {
         text: 'Depth (floors reached)'
       },
-      min: 0
+      min: 1,
+      labels: {
+        formatter: function() {
+          const levelDefinition = getLevelDefinition(this.value);
+          if (levelDefinition.value === 23) {
+            return "ocean";
+          }
+          return `${levelDefinition.toString()}`
+        }
+      },
+
+    },
+    legend:{
+      enabled:false,
     },
     series: [{
       data: chartData

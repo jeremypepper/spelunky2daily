@@ -85,7 +85,6 @@ export default function Histogram(props) {
           return `${levelDefinition.toString()}`
         }
       },
-
       crosshair: true
     },
     series: [{
