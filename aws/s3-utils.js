@@ -1,4 +1,5 @@
-
+const { DateTime } = require("luxon");
+const axios = require("axios");
 
 const AWS = require('aws-sdk');
 const s3 = new AWS.S3();
@@ -77,4 +78,38 @@ async function listFiles() {
   }
 }
 
-module.exports = { uploadFile, readJsonFile, doesPathExist, listFiles}
+async function fetchDayDataToS3(date) {
+  try {
+    const data = await axios({
+      method: "get",
+      url: `http://vdzserver.org/spelunky2/${date}.json`,
+    });
+    const json = data.data;
+    const path = getDayFilePath(date);
+    console.log(path);
+    await uploadFile(path, JSON.stringify(json))
+    // fs.writeFileSync(path, JSON.stringify(json));
+  } catch(e) {
+    console.error("error fetching data for date", date, e);
+  }
+}
+
+async function fetchAllDaysData(refetchFromDate) {
+  let date = DateTime.local().toUTC().startOf('day').plus({ days: -1 });
+  while(date >= refetchFromDate) {
+    const formattedDay = date.toFormat("yyyy-MM-dd");
+    const path = getDayFilePath(formattedDay);
+    if (!await doesPathExist(path)) {
+      await fetchDayDataToS3(formattedDay);
+    } else {
+      console.log(`path exists for ${path}, skipping fetch`)
+    }
+    date = date.plus({ days: -1 });
+  }
+}
+
+function getDayFilePath(formattedDay) {
+  return `dates/${formattedDay}.json`;
+}
+
+module.exports = { uploadFile, readJsonFile, doesPathExist, listFiles, fetchAllDaysData, getDayFilePath}

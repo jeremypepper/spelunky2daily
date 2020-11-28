@@ -1,7 +1,7 @@
 const {DateTime} = require("luxon");
 
 function parseDate(dateText) {
-  const date = DateTime.fromFormat(dateText, "yyyy-MM-dd").valueOf()
+  const date = DateTime.fromFormat(dateText, "yyyy-MM-dd", {zone: 'utc'}).valueOf()
   return date;
 }
 

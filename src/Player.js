@@ -10,20 +10,24 @@ import Highcharts from 'highcharts';
 import HighchartsReact from 'highcharts-react-official'
 import {parseDate, getPlayerName, getLevelDefinition} from "./utils";
 import {fetchPath, fetchPlayer} from "./api";
+const {DateTime} = require("luxon");
 
 function Player(props) {
   const [playerData, setPlayerData] = useState(null);
+  const [percentilesByDate, setPercentilesByDate] = useState(null);
   const player = props.player;
 
   useEffect(() => {
-    // const playerSlug = getPlayerName(player);
-    // const playerFolder = playerSlug.charAt(0).toLowerCase();
     fetchPlayer(player)
-    // fetchPath( `/players/${playerFolder}/${playerSlug}.json`)
       .then((data) => {
         setPlayerData(data);
       });
   }, [player]);
+  useEffect(()=> {
+    fetchPath("/percentilesByDate.json")
+        .then(d=>d.json())
+        .then(newPercentilesByDate=> setPercentilesByDate(newPercentilesByDate))
+  },[])
 
   if (!playerData) {
     return null;
@@ -55,13 +59,34 @@ function Player(props) {
     return createDayRow(date, dataDay);
   })
 
-  function getChartData(dataByDay) {
+  function getChartData(dataByDay, percentilesByDate) {
     return _.map(dataByDay, (dayData, day) => {
       return [parseDate(day), dayData.level];
     }).reverse();
   }
 
-  const chartData = getChartData(playerData.scoreData)
+  const chartData = getChartData(playerData.scoreData, percentilesByDate);
+  const p25Series = [];
+  const p50Series = [];
+  const p75Series = [];
+  const p80Series = [];
+  const p90Series = [];
+  const p95Series = [];
+  const p99Series = [];
+  _.forEach(chartData, (data) => {
+    const date = DateTime.fromMillis(data[0], {zone: 'UTC'})
+    // const date = new Date(key)
+    const dataForDate = percentilesByDate[date.toString()];
+    if (dataForDate) {
+      p25Series.push([data[0], dataForDate["p25"]]);
+      p50Series.push([data[0], dataForDate["p50"]]);
+      p75Series.push([data[0], dataForDate["p75"]]);
+      p80Series.push([data[0], dataForDate["p80"]]);
+      p90Series.push([data[0], dataForDate["p90"]]);
+      p95Series.push([data[0], dataForDate["p95"]]);
+      p99Series.push([data[0], dataForDate["p99"]]);
+    }
+  })
   const options = {
     credits: {
       enabled: false
@@ -104,11 +129,43 @@ function Player(props) {
 
     },
     legend:{
-      enabled:false,
+      enabled:true,
     },
     series: [{
+      name: player,
       data: chartData
-    }]
+    },
+    //   {
+    //   name: "25th percentile",
+    //   data: p25Series,
+    //   dashStyle: 'ShortDash',
+    // },
+      {
+      name: "50th percentile",
+      color: "#DDDDDD",
+      dashStyle: 'ShortDash',
+      data: p50Series,
+    },
+      // {
+    //   name: "75th percentile",
+    //     selected: false,
+    //     color: "#CCFFFF",
+    //     dashStyle: 'ShortDash',
+    //   data: p75Series,
+    // }, {
+    //   name: "90th percentile",
+    //     selected: false,
+    //     color: "#CCFFCC",
+    //   data: p90Series,
+    // }
+    // , {
+    //   name: "95th percentile",
+    //   data: p95Series,
+    // }, {
+    //   name: "99th percentile",
+    //   data: p99Series,
+    // }
+    ]
   }
   const Chart = () => <div>
     <HighchartsReact

@@ -216,7 +216,7 @@ async function writeDataSummaries(dataByPlayer, dataByDate, tenDayPercentileScor
 
 function mergeHistoricalPlayerData(dataByPlayer, playersFromDB) {
   _.each(playersFromDB, playerFromDB => {
-    const latestData = dataByPlayer[playerFromDB.playerName];
+    const latestData = dataByPlayer[playerFromDB.name];
     if (latestData) {
       _.merge(latestData.scoreData, playerFromDB.scoreData);
     }
@@ -244,7 +244,9 @@ async function runWithParams(params) {
   }
   attachSummaries(dataByPlayer);
   const {tenDayPercentileScoreList} = calculatePercentiles(dataByPlayer)
-  await writeDataSummaries(dataByPlayer, dataByDate, tenDayPercentileScoreList, percentilesByDate);
+  if (params.dryRun) {
+    await writeDataSummaries(dataByPlayer, dataByDate, tenDayPercentileScoreList, percentilesByDate);
+  }
 }
 
 async function run() {
@@ -255,8 +257,8 @@ async function run() {
   // attachSummaries(dataByPlayer);
   // await writeDataSummaries(dataByPlayer, dataByDate, tenDayPercentileScoreList, percentilesByDate);
   let date = DateTime.local().toUTC().startOf('day').plus({ days: LOOKBACK_DAYS })
-  await runWithParams({fetchAllDaysData: false, refetchFromDate: date})
-  // await runWithParams({fetchAllDaysData: true})
+  // await runWithParams({fetchAllDaysData: false, refetchFromDate: date, dryRun: true})
+  await runWithParams({fetchAllDaysData: true})
 }
 
 
