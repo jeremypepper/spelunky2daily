@@ -41,5 +41,9 @@ header .main {
   font-size: 3em;
 }
 nav.day-nav a {
-  padding: 10px;
+  margin: 10px;
+}
+
+.subtitle {
+  margin: 10px;
 }
