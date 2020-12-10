@@ -1,8 +1,8 @@
 {
   "files": {
     "main.css": "/spelunky2daily/static/css/main.ee06f0a9.chunk.css",
-    "main.js": "/spelunky2daily/static/js/main.6e7ff79d.chunk.js",
-    "main.js.map": "/spelunky2daily/static/js/main.6e7ff79d.chunk.js.map",
+    "main.js": "/spelunky2daily/static/js/main.3526d285.chunk.js",
+    "main.js.map": "/spelunky2daily/static/js/main.3526d285.chunk.js.map",
     "runtime-main.js": "/spelunky2daily/static/js/runtime-main.4fc2b552.js",
     "runtime-main.js.map": "/spelunky2daily/static/js/runtime-main.4fc2b552.js.map",
     "static/js/2.cc7265de.chunk.js": "/spelunky2daily/static/js/2.cc7265de.chunk.js",
@@ -17,6 +17,6 @@
     "static/js/runtime-main.4fc2b552.js",
     "static/js/2.cc7265de.chunk.js",
     "static/css/main.ee06f0a9.chunk.css",
-    "static/js/main.6e7ff79d.chunk.js"
+    "static/js/main.3526d285.chunk.js"
   ]
 }
